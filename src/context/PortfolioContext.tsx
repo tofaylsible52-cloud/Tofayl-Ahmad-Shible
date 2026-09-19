@@ -10,6 +10,7 @@ import {
   ContactInfo,
   DemoReelInfo,
   PortfolioProject,
+  ProjectComment,
   ServiceItem,
   SoftwareSkill,
   TechnicalSkill,
@@ -151,6 +152,12 @@ interface PortfolioContextType {
   // Active viewing project modal
   selectedProject: PortfolioProject | null;
   setSelectedProject: (project: PortfolioProject | null) => void;
+
+  // Social interactions (Like, Comment, Admin View Counts)
+  likeProject: (projectId: string) => void;
+  addProjectComment: (projectId: string, authorName: string, text: string) => void;
+  incrementProjectView: (projectId: string) => void;
+  totalWebsiteViews: number;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | null>(null);
@@ -278,6 +285,9 @@ function sanitizePortfolioData(raw: any): PortfolioData {
     projects: Array.isArray(raw.projects) && raw.projects.length > 0 ? raw.projects.map((p: any) => ({
       ...p,
       softwareUsed: Array.isArray(p.softwareUsed) ? p.softwareUsed : [],
+      likesCount: typeof p.likesCount === 'number' ? p.likesCount : (p.likesCount || 0),
+      viewsCount: typeof p.viewsCount === 'number' ? p.viewsCount : (p.viewsCount || 0),
+      comments: Array.isArray(p.comments) ? p.comments : [],
     })) : DEFAULT_PORTFOLIO_DATA.projects,
     videoServices: Array.isArray(raw.videoServices) && raw.videoServices.length > 0 ? raw.videoServices.map((s: any) => ({
       ...s,
@@ -590,6 +600,43 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     onSelect: () => {},
   });
 
+  const [totalWebsiteViews, setTotalWebsiteViews] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('tofayel_portfolio_site_views');
+      return saved ? parseInt(saved, 10) : 1248;
+    } catch {
+      return 1248;
+    }
+  });
+
+  // Track site-wide views in Firestore analytics doc
+  useEffect(() => {
+    let unsub = () => {};
+    try {
+      const analyticsDocRef = doc(db, 'portfolio', 'analytics');
+      unsub = onSnapshot(analyticsDocRef, (snap) => {
+        if (snap.exists()) {
+          const count = snap.data()?.totalViews;
+          if (typeof count === 'number') {
+            setTotalWebsiteViews(count);
+          }
+        }
+      });
+      // Increment session view count once per session
+      const hasViewedThisSession = sessionStorage.getItem('tofayel_visited_session');
+      if (!hasViewedThisSession) {
+        sessionStorage.setItem('tofayel_visited_session', 'true');
+        getDoc(analyticsDocRef).then((s) => {
+          const current = s.exists() ? (s.data()?.totalViews || 1248) : 1248;
+          setDoc(analyticsDocRef, { totalViews: current + 1 }, { merge: true });
+        }).catch(() => {});
+      }
+    } catch (e) {
+      console.warn('Analytics init notice:', e);
+    }
+    return () => unsub();
+  }, []);
+
   // Live sync with Firebase Firestore database across all devices
   useEffect(() => {
     let unsubscribe = () => {};
@@ -831,6 +878,65 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }));
     showNotification('Project deleted.', 'info');
   }, [showNotification]);
+
+  // Social & Engagement Actions (Like, Comment, View counter)
+  const likeProject = useCallback((projectId: string) => {
+    setData((prev) => ({
+      ...prev,
+      projects: prev.projects.map((p) => {
+        if (p.id === projectId) {
+          const currentLikes = p.likesCount || 0;
+          return { ...p, likesCount: currentLikes + 1 };
+        }
+        return p;
+      }),
+    }));
+    showNotification('ধন্যবাদ! লাভ রিঅ্যাক্ট দেওয়া হয়েছে ❤️', 'success');
+  }, [showNotification]);
+
+  const addProjectComment = useCallback((projectId: string, authorName: string, text: string) => {
+    if (!text.trim()) return;
+    const newComment: ProjectComment = {
+      id: `comment-${Date.now()}`,
+      authorName: authorName.trim() || 'Visitor',
+      text: text.trim(),
+      createdAt: new Date().toLocaleDateString('bn-BD', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+    };
+
+    setData((prev) => ({
+      ...prev,
+      projects: prev.projects.map((p) => {
+        if (p.id === projectId) {
+          return {
+            ...p,
+            comments: [...(p.comments || []), newComment],
+          };
+        }
+        return p;
+      }),
+    }));
+    showNotification('আপনার মন্তব্য সফলভাবে যোগ করা হয়েছে!', 'success');
+  }, [showNotification]);
+
+  const incrementProjectView = useCallback((projectId: string) => {
+    const sessionKey = `viewed_proj_${projectId}`;
+    if (sessionStorage.getItem(sessionKey)) return;
+    sessionStorage.setItem(sessionKey, 'true');
+
+    setData((prev) => ({
+      ...prev,
+      projects: prev.projects.map((p) => {
+        if (p.id === projectId) {
+          return { ...p, viewsCount: (p.viewsCount || 0) + 1 };
+        }
+        return p;
+      }),
+    }));
+  }, []);
 
   // Video Services
   const addVideoService = useCallback((service: Omit<ServiceItem, 'id'>) => {
@@ -1147,6 +1253,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         setIsVisitingCardOpen,
         selectedProject,
         setSelectedProject,
+        likeProject,
+        addProjectComment,
+        incrementProjectView,
+        totalWebsiteViews,
       }}
     >
       {children}

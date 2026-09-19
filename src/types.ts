@@ -11,6 +11,13 @@ export interface SocialLink {
   iconName: string;
 }
 
+export interface ProjectComment {
+  id: string;
+  authorName: string;
+  text: string;
+  createdAt: string;
+}
+
 export interface PortfolioProject {
   id: string;
   title: string;
@@ -22,9 +29,14 @@ export interface PortfolioProject {
   clientName: string;
   softwareUsed: string[];
   featured: boolean;
+  isPinned?: boolean; // Pinned to top 4 showcase slots
+  pinOrder?: number;  // 1, 2, 3, 4
   projectDate: string;
   demoUrl?: string;
   aspectRatio?: '16:9' | '9:16' | '1:1' | '4:5';
+  likesCount?: number;
+  viewsCount?: number;
+  comments?: ProjectComment[];
 }
 
 export interface ServiceItem {

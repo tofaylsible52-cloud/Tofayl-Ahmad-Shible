@@ -31,6 +31,8 @@ interface MediaLinkModalProps {
     title?: string;
     category?: 'Video Editing' | 'Graphic Design';
     subCategory?: string;
+    isPinned?: boolean;
+    pinOrder?: number;
   }) => void;
 }
 
@@ -45,6 +47,8 @@ export const MediaLinkModal: React.FC<MediaLinkModalProps> = ({
   const [videoUrl, setVideoUrl] = useState('');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<'Graphic Design' | 'Video Editing'>('Graphic Design');
+  const [isPinned, setIsPinned] = useState<boolean>(true);
+  const [pinOrder, setPinOrder] = useState<number>(1);
   const [imageError, setImageError] = useState(false);
   const [isResolvingImage, setIsResolvingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,6 +81,8 @@ export const MediaLinkModal: React.FC<MediaLinkModalProps> = ({
       setVideoUrl(project.videoUrl || '');
       setTitle(project.title || '');
       setCategory(project.category);
+      setIsPinned(project.isPinned !== false);
+      setPinOrder(project.pinOrder || 1);
       // Auto select tab based on project category or existence of video
       if (project.category === 'Video Editing' || project.videoUrl) {
         setActiveTab('video');
@@ -123,6 +129,8 @@ export const MediaLinkModal: React.FC<MediaLinkModalProps> = ({
         title: title.trim() || project.title,
         category: 'Graphic Design',
         videoUrl: '', // remove video if switching to pure image graphic
+        isPinned,
+        pinOrder: isPinned ? pinOrder : undefined,
       });
     } else {
       onSave({
@@ -130,6 +138,8 @@ export const MediaLinkModal: React.FC<MediaLinkModalProps> = ({
         thumbnailUrl: ytThumbnail || imageUrl.trim() || project.thumbnailUrl,
         title: title.trim() || project.title,
         category: 'Video Editing',
+        isPinned,
+        pinOrder: isPinned ? pinOrder : undefined,
       });
     }
 
@@ -403,6 +413,52 @@ export const MediaLinkModal: React.FC<MediaLinkModalProps> = ({
                 placeholder="e.g. Brand Logo Design / Motion Ad"
                 className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-indigo-500"
               />
+            </div>
+
+            {/* Pinned Showcase Setting (Top 4 Fixed Slot) */}
+            <div className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>হোমপেজ টপ ৪ পিন স্লট (Fixed Top 4 Showcase)</span>
+                  </div>
+                  <p className="text-[11px] text-neutral-400">
+                    এই প্রজেক্টটি হোমপেজের মূল ৪টি ফিক্সড স্লটে পিন করে রাখবেন কি না
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isPinned}
+                    onChange={(e) => setIsPinned(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                </label>
+              </div>
+
+              {isPinned && (
+                <div className="pt-2 border-t border-neutral-800 flex items-center justify-between text-xs">
+                  <span className="text-neutral-300 font-medium">স্লট পজিশন (১ থেকে ৪):</span>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setPinOrder(num)}
+                        className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-all cursor-pointer ${
+                          pinOrder === num
+                            ? 'bg-amber-500 text-neutral-950 shadow-md'
+                            : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-700'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer Actions */}

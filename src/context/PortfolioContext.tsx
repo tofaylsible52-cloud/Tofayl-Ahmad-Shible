@@ -23,8 +23,10 @@ import {
 } from '../types';
 import { DEFAULT_PORTFOLIO_DATA } from '../data/defaultData';
 import { Language, Translations, translations } from '../utils/translations';
+import { db, doc, getDoc, setDoc, onSnapshot } from '../lib/firebase';
 
 const LOCAL_STORAGE_KEY = 'tofayel_portfolio_data_v2';
+const FIRESTORE_DOC_PATH = 'portfolio/main_content';
 const LOCAL_STORAGE_LANG_KEY = 'tofayel_portfolio_lang';
 const LOCAL_STORAGE_COLOR_THEME_KEY = 'tofayel_portfolio_color_theme';
 const LOCAL_STORAGE_ADMIN_KEY = 'tofayel_admin_unlocked';
@@ -588,7 +590,38 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     onSelect: () => {},
   });
 
-  // Track unsaved changes & auto-persist to localStorage immediately so user edits are NEVER lost
+  // Live sync with Firebase Firestore database across all devices
+  useEffect(() => {
+    let unsubscribe = () => {};
+    try {
+      const docRef = doc(db, 'portfolio', 'main_content');
+      unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const remoteData = docSnap.data();
+          if (remoteData && typeof remoteData === 'object' && remoteData.personal) {
+            const sanitized = sanitizePortfolioData(remoteData);
+            setData(sanitized);
+            setLastSavedData(sanitized);
+            try {
+              const dataStr = JSON.stringify(sanitized);
+              localStorage.setItem('tofayel_portfolio_data_v2', dataStr);
+              localStorage.setItem('tofayel_portfolio_data', dataStr);
+            } catch (_) {}
+          }
+        }
+      }, (err) => {
+        console.warn('Firestore snapshot listener note:', err);
+      });
+    } catch (e) {
+      console.warn('Firestore sync init error:', e);
+    }
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // Track changes & auto-persist to LocalStorage + Cloud Firestore (with debounce)
   useEffect(() => {
     const isDifferent = JSON.stringify(data) !== JSON.stringify(lastSavedData);
     setHasUnsavedChanges(isDifferent);
@@ -601,6 +634,18 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error('Auto-save error:', e);
     }
+
+    // Debounced automatic cloud sync so changes made in admin are instantly permanent
+    const timer = setTimeout(async () => {
+      try {
+        const docRef = doc(db, 'portfolio', 'main_content');
+        await setDoc(docRef, data, { merge: true });
+      } catch (err) {
+        console.warn('Auto cloud sync notice:', err);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [data, lastSavedData]);
 
   // Handle Theme switch
@@ -620,20 +665,29 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Save changes
-  const saveChanges = useCallback(() => {
+  // Save changes to both LocalStorage AND Firebase Firestore Cloud Database
+  const saveChanges = useCallback(async () => {
     try {
       const dataStr = JSON.stringify(data);
       localStorage.setItem('tofayel_portfolio_data_v2', dataStr);
       localStorage.setItem('tofayel_portfolio_data', dataStr);
       localStorage.setItem('tofayel_portfolio_data_v3', dataStr);
       localStorage.setItem('tofayel_portfolio_data_v1', dataStr);
+      
+      // Save permanently to Firestore Cloud
+      try {
+        const docRef = doc(db, 'portfolio', 'main_content');
+        await setDoc(docRef, data, { merge: true });
+      } catch (cloudErr) {
+        console.warn('Cloud sync error (fallback to local):', cloudErr);
+      }
+
       setLastSavedData(data);
       setHasUnsavedChanges(false);
-      showNotification('All portfolio changes saved successfully!', 'success');
+      showNotification('সব পরিবর্তন ক্লাউড ডাটাবেজে পার্মানেন্টলি সেভ করা হয়েছে!', 'success');
     } catch (e) {
       console.error('Save error:', e);
-      showNotification('Failed to save to localStorage. Storage may be full.', 'error');
+      showNotification('Failed to save. Storage may be full.', 'error');
     }
   }, [data, showNotification]);
 

@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Portfolio public data and live custom updates
+    match /portfolio/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

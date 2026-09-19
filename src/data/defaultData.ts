@@ -25,7 +25,7 @@ export const DEFAULT_PORTFOLIO_DATA: PortfolioData = {
     shortLocation: "Jurain, Shyampur, Dhaka-1204",
     trainingSummary: "Certified from As-Sunnah Skill Development Institute in Small Business Management (Batch 37, 2026), specializing in Graphic Design, Video Editing & AI Tools.",
     // Curated high quality creative portraits and graphics
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    avatarUrl: "https://i.postimg.cc/HxSpKkdQ/Gemini-Generated-Image-3630bg3630bg3630.jpg",
     heroBannerUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
     availabilityStatus: "available",
     availabilityText: "Available for freelance & full-time projects",

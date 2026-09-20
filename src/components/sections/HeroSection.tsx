@@ -177,7 +177,32 @@ export const HeroSection: React.FC = () => {
 
           {/* Right Hero Creative Card Showcase (5 Cols) */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
-            <div className="relative w-full max-w-[330px] sm:max-w-[360px]">
+            <div className="relative w-full max-w-[330px] sm:max-w-[360px] flex flex-col">
+              {/* Admin-Only Total Website Views (Visible only in Admin mode) */}
+              {isEditMode && (
+                <div className="mb-3 p-3 rounded-2xl bg-amber-950/40 border border-amber-500/40 backdrop-blur-md shadow-lg flex items-center justify-between animate-fadeIn">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                      <Eye className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-amber-300 flex items-center gap-1">
+                        <span>{language === 'bn' ? 'ওয়েবসাইট ভিউ' : 'Website Views'}</span>
+                        <span className="text-[9px] px-1.5 py-0.2 bg-amber-500/20 text-amber-200 rounded font-semibold">Admin Only</span>
+                      </div>
+                      <p className="text-[10px] text-neutral-400">
+                        {language === 'bn' ? 'শুধুমাত্র আপনি দেখতে পাচ্ছেন' : 'Visible only to Admin'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-base sm:text-lg font-black font-display text-white">
+                      {totalWebsiteViews.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Subtle ambient aura ring */}
               <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-500/30 via-purple-500/30 to-pink-500/25 rounded-3xl blur-md pointer-events-none" />
 
@@ -251,31 +276,6 @@ export const HeroSection: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Admin-Only Total Website Views (Visible only in Admin mode) */}
-              {isEditMode && (
-                <div className="mt-3 p-3 rounded-2xl bg-amber-950/40 border border-amber-500/40 backdrop-blur-md shadow-lg flex items-center justify-between animate-fadeIn">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                      <Eye className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-amber-300 flex items-center gap-1">
-                        <span>{language === 'bn' ? 'ওয়েবসাইট ভিউ' : 'Website Views'}</span>
-                        <span className="text-[9px] px-1.5 py-0.2 bg-amber-500/20 text-amber-200 rounded font-semibold">Admin Only</span>
-                      </div>
-                      <p className="text-[10px] text-neutral-400">
-                        {language === 'bn' ? 'শুধুমাত্র আপনি দেখতে পাচ্ছেন' : 'Visible only to Admin'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-base sm:text-lg font-black font-display text-white">
-                      {totalWebsiteViews.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

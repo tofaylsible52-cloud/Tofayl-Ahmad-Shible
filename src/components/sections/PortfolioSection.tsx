@@ -68,9 +68,10 @@ export const PortfolioSection: React.FC = () => {
   // Top 4 Pinned Graphic Projects sorted by pinOrder or index
   const pinnedGraphicProjects = [...graphicProjects]
     .sort((a, b) => {
-      const aPinned = a.isPinned !== false ? 1 : 0;
-      const bPinned = b.isPinned !== false ? 1 : 0;
-      if (aPinned !== bPinned) return bPinned - aPinned;
+      // Pinned items (true) first
+      if (a.isPinned !== false && b.isPinned === false) return -1;
+      if (a.isPinned === false && b.isPinned !== false) return 1;
+      // If both pinned or both not pinned, use pinOrder
       return (a.pinOrder || 99) - (b.pinOrder || 99);
     })
     .slice(0, 4);
@@ -78,9 +79,10 @@ export const PortfolioSection: React.FC = () => {
   // Top 4 Pinned Video Projects sorted by pinOrder or index
   const pinnedVideoProjects = [...videoProjects]
     .sort((a, b) => {
-      const aPinned = a.isPinned !== false ? 1 : 0;
-      const bPinned = b.isPinned !== false ? 1 : 0;
-      if (aPinned !== bPinned) return bPinned - aPinned;
+      // Pinned items (true) first
+      if (a.isPinned !== false && b.isPinned === false) return -1;
+      if (a.isPinned === false && b.isPinned !== false) return 1;
+      // If both pinned or both not pinned, use pinOrder
       return (a.pinOrder || 99) - (b.pinOrder || 99);
     })
     .slice(0, 4);

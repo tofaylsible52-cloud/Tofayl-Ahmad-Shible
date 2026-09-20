@@ -38,9 +38,10 @@ export const HeroSection: React.FC = () => {
   return (
     <section id="home" className="relative min-h-[90vh] pt-28 pb-20 flex items-center overflow-hidden">
       {/* Background ambient lighting blobs */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[700px] h-[350px] bg-gradient-to-tr from-indigo-600/15 via-purple-600/15 to-pink-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute -top-12 right-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-10 left-10 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[500px] h-[500px] bg-neutral-800/20 rounded-full blur-[120px]" />
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
